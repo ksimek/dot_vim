@@ -44,6 +44,10 @@ end
 
 set gfn=Consolas:h12
 
+if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"
+  set t_Co=256
+endif
+
 if has("gui_running")
   set guioptions-=T
   let psc_style='cool'
@@ -52,16 +56,14 @@ elseif &term=~'linux'
   colorscheme desert
   colorscheme evening
 elseif &term=~'xterm'
-  set t_Co=256
-
   if &diff
     colorscheme desert
   else 
 	set background=dark
     colors elflord
-"	colors default
   endif
 endif
+
 "Highlight current line
 if has("gui_running")
   set cursorline
@@ -87,9 +89,12 @@ let g:miniBufExplVSplit = 25
 let g:miniBufExplSplitBelow=1
 " c-support plugin
 let s:C_CodeSnippets   = '/home/ksimek/school/projects/boilerplate'
+
 " command-t plugin
-let g:CommandTMaxDepth = 5
-:set wildignore=*.o,*.a,build,test,Include_lines,Makefile*,dev,prod,*.jpg,*tiff,*tmp,*.bak
+"let g:CommandTMaxDepth = 5
+let g:ctrlp_max_depth = 5
+:set wildignore+=*.o,*.a,build,test,Include_lines,Makefile*,dev,prod,*.jpg,*tiff,*tmp,*.bak
+":set g:ctrlp_custom_ignore+=*.o,*.a,build,test,Include_lines,Makefile*,dev,prod,*.jpg,*tiff,*tmp,*.bak
 
 
 """""""""""""""""""""""""""""
@@ -118,7 +123,8 @@ nmap <C-u> yyp:s/./-/g<CR>
 nmap <C-l> o<ESC>60a-<ESC>
 autocmd FileType cpp nmap <C-l> o/* <ESC>74a-<ESC>a */
 " KJB Convenience Maps
-nmap <leader>k :CommandT $KJB_LIB_PATH<cr>
+"nmap <leader>k :CommandT $KJB_LIB_PATH<cr>
+nmap <leader>k :CtrlP $KJB_LIB_PATH<cr>
 " TABS
 nmap <leader>tn :tabnew %<cr>
 nmap <leader>tc :tabclose<cr>
