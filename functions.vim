@@ -1,5 +1,7 @@
 " vim:  ft=vim
 
+
+
 """""""""""""""""""""""""""""""""""""""""
 " :Shell command
 """""""""""""""""""""""""""""""""""""""""
@@ -128,3 +130,72 @@ endfu
 endfu
 :command! InitPaths call s:InitPaths() 
 :InitPaths 
+
+"""""""""""""""""""""""""""""
+" Parallel make
+"""""""""""""""""""""""""""""
+function! SetBaseMakeprg()
+  if !empty($NUMBER_OF_PROCESSORS)
+    " this works on Windows and provides a convenient override mechanism otherwise
+    let n = $NUMBER_OF_PROCESSORS + 0
+  elseif filereadable('/proc/cpuinfo')
+    " this works on most Linux systems
+    let n = system('grep -c ^processor /proc/cpuinfo') + 0
+  elseif executable('/usr/sbin/psrinfo')
+    " this works on Solaris
+    let n = system('/usr/sbin/psrinfo -p')
+  else
+    " default to single process if we can't figure it out automatically
+    let n = 1
+  endif
+  let g:base_makeprg = 'make' . (n > 1 ? (' -j'.(n + 1)) : '')
+endfunction
+
+""""""""""""""""""""""""""""
+" Out-of-source builds
+""""""""""""""""""""""""""""
+function! SetMakeprgPath()
+    " get full path
+    let current_path = expand('%:p:h')
+
+    " TODO: make the next four blocks a loop over a list of filenames:
+        
+    let builddir = findfile('build/Makefile', current_path . ';')
+    if !empty(builddir) 
+        let &makeprg .= ' -C ' . builddir 
+        return
+    endif
+
+    let builddir = findfile('build/makefile', current_path . ';')
+    if !empty(builddir) 
+        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        return
+    endif
+
+    " if subdirectory is "build" check parent for cmakelist
+    let builddir = findfile('Makefile', current_path . ';')
+    if !empty(builddir)
+        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        return
+    endif
+
+    " if subdirectory is "build" check parent for cmakelist
+    let builddir = findfile('makefile', current_path . ';')
+    if !empty(builddir)
+        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        return
+    endif
+
+    while !empty(current_path) && current_path != '/'
+        let current_dir = fnamemodify(current_path, ':t')
+        let parent = fnamemodify(current_path, ':h')
+        let build_dir = current_dir . '-build'
+        if !empty(findfile(build_dir . '/Makefile', parent))
+            let &makeprg = g:base_makeprg . ' -C ' . parent . '/' . build_dir
+            return
+        endif
+        let current_path = parent
+    endwhile
+
+    let &makeprg = g:base_makeprg
+endfunction
