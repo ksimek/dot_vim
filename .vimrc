@@ -2,7 +2,7 @@
 " Essentials
 """""""""""""""""""""""""""""""
 source ~/.vim/functions.vim
-execute pathogen#infect()
+
 :set nocp
 :syntax on
 :set number
@@ -20,6 +20,9 @@ execute pathogen#infect()
 :set hidden
 :set ruler
 :filetype plugin on
+:filetype on
+:nohlsearch
+:set noincsearch
 :set backupskip=/tmp/*,/private/tmp/*
 :set laststatus=2 " always show status line
 syntax enable
@@ -40,11 +43,28 @@ call SetBaseMakeprg()
 autocmd BufEnter * call SetMakeprgPath()
 
 :set mouse=a
-if has("mouse_sgr")
-    set ttymouse=sgr
+if !has("nvim")
+    execute pathogen#infect()
+    if has("mouse_sgr")
+        set ttymouse=sgr
+    else
+        set ttymouse=xterm2
+    endif
+endif
+
+if has('nvim')
+    command! Make Neomake!
+    autocmd! BufWritePost * Neomake
+    let g:neomake_cpp_gcc_maker = {
+    \  'args': ['-c', '-I/usr/include/eigen3', '-I$HOME/dev/mp_vision',
+    \           '-I$HOME/dev/mp_vision-build', '-std=c++11',
+    \           ],
+    \  'bufferoutput': 1,
+    \ }
+
 else
-    set ttymouse=xterm2
-end
+    command! Make make
+endif
 
 :helptags ~/.vim/doc
 ":set tags+=~/.vim/tags/gl
@@ -54,6 +74,10 @@ end
 :set tags+=~/.tags.d/mp_eos.tags
 
 
+"""""""""""""""""""""
+" Syntastic
+""""""""""""""""""""""
+let g:syntastic_c_include_dirs=['/usr/include/eigen3']
 
 """""""""""""""""""""
 " Colors
@@ -73,11 +97,11 @@ if has("gui_running")
 elseif &term=~'linux'
   colorscheme desert
   colorscheme evening
-elseif &term=~'xterm'
+elseif &term=~'xterm' || &term=="nvim"
   if &diff
     colorscheme desert
   else 
-	set background=dark
+    set background=dark
     colors elflord
   endif
 endif
@@ -93,6 +117,8 @@ endif
 hi Pmenu guibg=#333333
 hi PmenuSel guibg=#555555 guifg=#ffffff
 
+" dark status line.  I can't read text if it's near a bright status line
+hi StatusLine ctermbg=black ctermfg=lightgray
 
 
 """""""""""""""""""""""""""

@@ -162,27 +162,27 @@ function! SetMakeprgPath()
         
     let builddir = findfile('build/Makefile', current_path . ';')
     if !empty(builddir) 
-        let &makeprg .= ' -C ' . builddir 
+        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         return
     endif
 
     let builddir = findfile('build/makefile', current_path . ';')
     if !empty(builddir) 
-        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         return
     endif
 
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('Makefile', current_path . ';')
     if !empty(builddir)
-        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         return
     endif
 
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('makefile', current_path . ';')
     if !empty(builddir)
-        let &makeprg = g:base_makeprg . ' -C ' . builddir 
+        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         return
     endif
 
