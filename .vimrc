@@ -57,7 +57,11 @@ if has('nvim')
     autocmd! BufWritePost * Neomake
     let g:neomake_cpp_gcc_maker = {
     \  'args': ['-c', '-I/usr/include/eigen3', '-I$HOME/dev/mp_vision',
-    \           '-I$HOME/dev/mp_vision-build', '-std=c++11',
+    \           '-I$HOME/dev/mp_vision-build', 
+    \           '-include$HOME/.vim/neomake/eos.h',
+    \           '-std=c++11',
+    \           '-fopenmp',
+    \           '-Wall'
     \           ],
     \  'bufferoutput': 1,
     \ }
