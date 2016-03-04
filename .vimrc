@@ -58,6 +58,7 @@ if has('nvim')
     let g:neomake_cpp_gcc_maker = {
     \  'args': ['-c', '-I/usr/include/eigen3', '-I$HOME/dev/mp_vision',
     \           '-I$HOME/dev/mp_vision-build', 
+    \           '-I/usr/local/Cellar/opencv3/3.0.0/include', '-I/usr/local/include/eigen3',
     \           '-include$HOME/.vim/neomake/eos.h',
     \           '-std=c++11',
     \           '-fopenmp',
@@ -65,6 +66,7 @@ if has('nvim')
     \           ],
     \  'bufferoutput': 1,
     \ }
+    let g:neomake_cpp_clang_maker = neomake_cpp_gcc_maker
 
 else
     command! Make make
