@@ -144,6 +144,9 @@ function! SetBaseMakeprg()
   elseif executable('/usr/sbin/psrinfo')
     " this works on Solaris
     let n = system('/usr/sbin/psrinfo -p')
+  elseif executable('/usr/sbin/sysctl')
+    
+    let n = system('/usr/sbin/sysctl -n hw.ncpu')
   else
     " default to single process if we can't figure it out automatically
     let n = 1
