@@ -52,18 +52,32 @@ if !has("nvim")
     endif
 endif
 
+let &path=&path.',/usr/include/,/usr/local/include'
+let cpp_incl = ['/usr/include/eigen3',
+    \ $HOME.'/dev/mp_vision',
+    \ $HOME.'/dev/mp_vision-build',
+    \ '/usr/local/Cellar/opencv3/3.1.0_3/include',
+    \ '/usr/local/include/eigen3',
+    \ $HOME.'/dev/mp_vision/thirdparty/gtest/include/']
+for dir in cpp_incl
+    let &path=&path.','.dir
+endfor 
+
 if has('nvim')
     command! Make Neomake!
     autocmd! BufWritePost * Neomake
-    let g:neomake_cpp_gcc_maker = {
-    \  'args': ['-c', '-I/usr/include/eigen3', '-I$HOME/dev/mp_vision',
-    \           '-I$HOME/dev/mp_vision-build', 
-    \           '-I/usr/local/Cellar/opencv3/3.0.0/include', '-I/usr/local/include/eigen3',
-    \           '-include$HOME/.vim/neomake/eos.h',
+    let neomake_args = ['-c', 
     \           '-std=c++11',
     \           '-fopenmp',
-    \           '-Wall'
-    \           ],
+    \           '-include'.$HOME.'/.vim/neomake/eos.h',
+    \           '-Wall']
+
+    for dir in cpp_incl
+        call add(neomake_args, '-I'.dir)
+    endfor
+
+    let g:neomake_cpp_gcc_maker = {
+    \  'args': neomake_args,
     \  'bufferoutput': 1,
     \ }
     let g:neomake_cpp_clang_maker = neomake_cpp_gcc_maker
