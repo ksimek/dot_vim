@@ -41,6 +41,9 @@ autocmd VimLeave * call system("xsel -ib", getreg('+'))
 " help set makeprg for out-of-source builds
 call SetBaseMakeprg()
 autocmd BufEnter * call SetMakeprgPath()
+autocmd BufEnter * call SetupIncludeDirs()
+autocmd BufEnter * call SetupPath()
+autocmd BufEnter * call SetNeoMakeSearchPath()
 
 :set mouse=a
 if !has("nvim")
@@ -52,36 +55,28 @@ if !has("nvim")
     endif
 endif
 
-let &path=&path.',/usr/include/,/usr/local/include'
-let cpp_incl = ['/usr/include/eigen3',
-    \ $HOME.'/dev/mp_vision',
-    \ $HOME.'/dev/mp_vision-build',
+" path is actually set in SetupPath(), called at end of this script (and on
+" every buffer switch)
+let g:base_path=&path.',/usr/include/,/usr/local/include'
+
+let g:base_cpp_incl = ['/usr/include/eigen3',
     \ '/usr/local/Cellar/opencv3/3.1.0_3/include',
-    \ '/usr/local/include/eigen3',
-    \ $HOME.'/dev/mp_vision/thirdparty/gtest/include/']
-for dir in cpp_incl
-    let &path=&path.','.dir
-endfor 
+    \ '/usr/local/include/eigen3']
+call SetupIncludeDirs()
 
 if has('nvim')
-    command! Make Neomake!
-    autocmd! BufWritePost * Neomake
-    let neomake_args = ['-c', 
+    command! Make Neomake! " build entire project
+    autocmd! BufWritePost * Neomake " compile file on write
+
+    let g:base_neomake_cpp_args = ['-c', 
     \           '-std=c++11',
     \           '-fopenmp',
     \           '-include'.$HOME.'/.vim/neomake/eos.h',
     \           '-Wall']
 
-    for dir in cpp_incl
-        call add(neomake_args, '-I'.dir)
-    endfor
-
-    let g:neomake_cpp_gcc_maker = {
-    \  'args': neomake_args,
-    \  'bufferoutput': 1,
-    \ }
-    let g:neomake_cpp_clang_maker = neomake_cpp_gcc_maker
-
+    " g:neomake_cpp_gcc_maker is setup here:
+    " g:neomake_cpp_clang_maker is setup here:
+    call SetNeoMakeSearchPath() 
 else
     command! Make make
 endif
@@ -337,3 +332,7 @@ let g:clang_complete_copen = 1
 let g:clang_exec = 'clang++'
 nmap <leader>u :call g:ClangUpdateQuickFix()<cr>
 
+" this didn't stick when at the beginning of the file (only in neovim).  does  it stick now?
+set nohlsearch
+
+call SetupPath()

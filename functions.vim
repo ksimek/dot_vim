@@ -157,6 +157,9 @@ endfunction
 """"""""""""""""""""""""""""
 " Out-of-source builds
 """"""""""""""""""""""""""""
+" My heuristic script that tries to identify the source root
+" and the location of the build path. If found, it informs
+" NeoMake's functionality, and is added to the Path (in SetupPath)
 function! SetMakeprgPath()
     " get full path
     let current_path = expand('%:p:h')
@@ -165,27 +168,39 @@ function! SetMakeprgPath()
         
     let builddir = findfile('build/Makefile', current_path . ';')
     if !empty(builddir) 
+        echo 1
+        let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
+        let g:src_path = fnamemodify(g:build_path, ':h')
         return
     endif
 
     let builddir = findfile('build/makefile', current_path . ';')
     if !empty(builddir) 
+        echo 2
+        let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
+        let g:src_path = fnamemodify(g:build_path, ':h')
         return
     endif
 
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('Makefile', current_path . ';')
     if !empty(builddir)
+        echo 3
+        let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
+        let g:src_path = g:build_path
         return
     endif
 
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('makefile', current_path . ';')
     if !empty(builddir)
-        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
+        echo 4
+        let g:build_path = fnamemodify(builddir, ':h')
+        let &makeprg = g:base_makeprg . ' -C ' . build_path
+        let g:src_path = g:build_path
         return
     endif
 
@@ -194,11 +209,50 @@ function! SetMakeprgPath()
         let parent = fnamemodify(current_path, ':h')
         let build_dir = current_dir . '-build'
         if !empty(findfile(build_dir . '/Makefile', parent))
-            let &makeprg = g:base_makeprg . ' -C ' . parent . '/' . build_dir
+            let g:build_path = parent . '/' . build_dir
+            let &makeprg = g:base_makeprg . ' -C ' . g:build_path
+            let g:src_path = parent . '/' . current_dir
+        return
             return
         endif
         let current_path = parent
     endwhile
 
     let &makeprg = g:base_makeprg
+endfunction
+
+" setup a list of header search paths for c/c++ coding
+function! SetupIncludeDirs()
+    let g:cpp_incl = copy(g:base_cpp_incl)
+    if exists("g:src_path")
+        :call add(g:cpp_incl, g:src_path)
+        :call add(g:cpp_incl, g:src_path)
+        :call add(g:cpp_incl, g:src_path)
+    endif
+endfunction
+
+" setup search path, which may change depending on the current script's path
+function! SetupPath()
+    let &path = copy(g:base_path)
+    for dir in g:cpp_incl
+        let &path=&path.','.dir
+    endfor 
+endfunction
+
+" setup neomake build parameters, which may change depending on the current
+" script's path
+function! SetNeoMakeSearchPath()
+    if has('nvim')
+        let l:neomake_args = copy(g:base_neomake_cpp_args)
+        for dir in g:cpp_incl
+            call add(neomake_args, '-I'.dir)
+        endfor
+
+        let g:neomake_cpp_gcc_maker = {
+        \  'args': neomake_args,
+        \  'bufferoutput': 1,
+        \ }
+    let g:neomake_cpp_clang_maker = copy(g:neomake_cpp_gcc_maker)
+
+    endif
 endfunction
