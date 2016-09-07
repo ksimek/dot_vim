@@ -226,8 +226,9 @@ function! SetupIncludeDirs()
     let g:cpp_incl = copy(g:base_cpp_incl)
     if exists("g:src_path")
         :call add(g:cpp_incl, g:src_path)
-        :call add(g:cpp_incl, g:src_path)
-        :call add(g:cpp_incl, g:src_path)
+    endif
+    if exists("g:build_path")
+        :call add(g:cpp_incl, g:build_path)
     endif
 endfunction
 
