@@ -226,6 +226,10 @@ function! SetupIncludeDirs()
     let g:cpp_incl = copy(g:base_cpp_incl)
     if exists("g:src_path")
         :call add(g:cpp_incl, g:src_path)
+        " TODO: make this specific to src_path.  (e.g. read a file called
+        " include_paths.txt)
+        :call add(g:cpp_incl, g:src_path . '/thirdparty/gtest/include')
+        :call add(g:cpp_incl, g:src_path . '/thirdparty/OpenNI2/Include')
     endif
     if exists("g:build_path")
         :call add(g:cpp_incl, g:build_path)
@@ -233,6 +237,7 @@ function! SetupIncludeDirs()
 endfunction
 
 " setup search path, which may change depending on the current script's path
+" Note: call AFTER SetupIncludeDirs 
 function! SetupPath()
     let &path = copy(g:base_path)
     for dir in g:cpp_incl

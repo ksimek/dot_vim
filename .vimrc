@@ -57,9 +57,10 @@ endif
 
 " path is actually set in SetupPath(), called at end of this script (and on
 " every buffer switch)
-let g:base_path=&path.',/usr/include/,/usr/local/include'
+let g:base_path=&path.''
 
-let g:base_cpp_incl = ['/usr/include/eigen3',
+let g:base_cpp_incl = ['/usr/include/','/usr/local/include',
+    \ '/usr/include/eigen3',
     \ '/usr/local/Cellar/opencv3/3.1.0_3/include',
     \ '/usr/local/include/eigen3']
 call SetupIncludeDirs()
@@ -265,30 +266,36 @@ autocmd BufRead *.py nmap <F5> :!python %<CR>
 """""""""""""""""""""""""""""
 " Make customization
 """"""""""""""""""""""""""""
-set errorformat=%-GBuild\ start\ %m,
-    \%-GBuild\ end\ %.%#,
-    \%*[^\"]\"%f\"%*\\D%l:\ %m,
-    \\"%f\"%*\\D%l:\ %m,
-    \%-G%f:%l:\ (Each\ undeclared\ identifier\ is\ reported\ only\ once,
-    \%-G%f:%l:\ for\ each\ function\ it\ appears\ in.),
-    \%f(%l):%m,
-    \%f:%l:%c:\ %trror:\ %m,
+"set errorformat=%-GBuild\ start\ %m,
+"    \%-GBuild\ end\ %.%#,
+"    \%*[^\"]\"%f\"%*\\D%l:\ %m,
+"    \\"%f\"%*\\D%l:\ %m,
+"    \%-G%f:%l:\ (Each\ undeclared\ identifier\ is\ reported\ only\ once,
+"    \%-G%f:%l:\ for\ each\ function\ it\ appears\ in.),
+"    \%f(%l):%m,
+"    \%f:%l:%c:\ %trror:\ %m,
+"    \%f:%l:\ %trror:\ %m,
+"    \%f:%l:%c:\ %tarning:\ %m,
+"    \%f:%l:\ %tarning:\ %m,
+"    \%f:%l:%c:%m,
+"    \%f:%l:%m,
+"    \\"%f\"\\,
+"    \\ line\ %l%*\\D%c%*[^\ ]\ %m,
+"    \%D%*\\a[%*\\d]:\ Entering\ directory\ `%f',
+"    \%X%*\\a[%*\\d]:\ Leaving\ directory\ `%f',
+"    \%D%*\\a:\ Entering\ directory\ `%f',
+"    \%X%*\\a:\ Leaving\ directory\ `%f',
+"    \%DMaking\ %*\\a\ in\ %f,
+"    \%f\\|%l\|\ %m
+"set errorformat^=%-GIn\ file\ included\ from\ %f:%l:%c:,%-GIn\ file
+"                        \\ included\ from\ %f:%l:%c\\,,%-GIn\ file\ included\ from\ %f
+"                        \:%l:%c,%-GIn\ file\ included\ from\ %f:%l
+
+set errorformat^=\%f:%l:%c:\ %trror:\ %m,
     \%f:%l:\ %trror:\ %m,
     \%f:%l:%c:\ %tarning:\ %m,
     \%f:%l:\ %tarning:\ %m,
-    \%f:%l:%c:%m,
-    \%f:%l:%m,
-    \\"%f\"\\,
-    \\ line\ %l%*\\D%c%*[^\ ]\ %m,
-    \%D%*\\a[%*\\d]:\ Entering\ directory\ `%f',
-    \%X%*\\a[%*\\d]:\ Leaving\ directory\ `%f',
-    \%D%*\\a:\ Entering\ directory\ `%f',
-    \%X%*\\a:\ Leaving\ directory\ `%f',
-    \%DMaking\ %*\\a\ in\ %f,
-    \%f\\|%l\|\ %m
-set errorformat^=%-GIn\ file\ included\ from\ %f:%l:%c:,%-GIn\ file
-                        \\ included\ from\ %f:%l:%c\\,,%-GIn\ file\ included\ from\ %f
-                        \:%l:%c,%-GIn\ file\ included\ from\ %f:%l
+set errorformat^=%-GIn\ file\ included\ %.%# 
 
 
 """"""""""""""""""""
