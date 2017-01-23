@@ -73,7 +73,9 @@ if has('nvim')
     \           '-std=c++11',
     \           '-fopenmp',
     \           '-include'.$HOME.'/.vim/neomake/eos.h',
-    \           '-Wall']
+    \           '-Wall',
+    \           '-Wpedantic',
+    \           '-Wextra']
 
     " g:neomake_cpp_gcc_maker is setup here:
     " g:neomake_cpp_clang_maker is setup here:
