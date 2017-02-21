@@ -119,17 +119,33 @@ fun! Wp()
   set spell spelllang=en_us
 endfu
 
-:function! s:InitPaths()
-:if filereadable('.paths')
-:  let fname='.paths'
-:  set path=.,/usr/include,,
-:  for line in readfile(fname, '')
-:  let &path=&path.','.line
-:  endfor
-:endif
-endfu
-:command! InitPaths call s:InitPaths() 
-:InitPaths 
+function! GatherPathsFromFile(fname, ...)
+    let paths_list = []
+    if !filereadable(a:fname)
+        return paths_list
+    endif
+
+    if a:0 == 0
+        let cwd = ''
+    else
+        let cwd = a:1
+    endif
+
+    if cwd == ''
+        let cwd = expand('%:p:h')
+    endif
+
+    for line in readfile(a:fname, '')
+        if line[0] == '/'
+            " Absolute filenames
+            call add(paths_list, line)
+        else
+            " Relative filenames
+            call add(paths_list, cwd . '/' . line)
+        endif
+    endfor
+    return paths_list
+endfunction
 
 """""""""""""""""""""""""""""
 " Parallel make
@@ -168,7 +184,6 @@ function! SetMakeprgPath()
         
     let builddir = findfile('build/Makefile', current_path . ';')
     if !empty(builddir) 
-        echo 1
         let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         let g:src_path = fnamemodify(g:build_path, ':h')
@@ -177,7 +192,6 @@ function! SetMakeprgPath()
 
     let builddir = findfile('build/makefile', current_path . ';')
     if !empty(builddir) 
-        echo 2
         let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         let g:src_path = fnamemodify(g:build_path, ':h')
@@ -187,7 +201,6 @@ function! SetMakeprgPath()
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('Makefile', current_path . ';')
     if !empty(builddir)
-        echo 3
         let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
         let g:src_path = g:build_path
@@ -197,7 +210,6 @@ function! SetMakeprgPath()
     " if subdirectory is "build" check parent for cmakelist
     let builddir = findfile('makefile', current_path . ';')
     if !empty(builddir)
-        echo 4
         let g:build_path = fnamemodify(builddir, ':h')
         let &makeprg = g:base_makeprg . ' -C ' . build_path
         let g:src_path = g:build_path
@@ -221,15 +233,39 @@ function! SetMakeprgPath()
     let &makeprg = g:base_makeprg
 endfunction
 
+function! SetupAlternativePath()
+    if !exists('g:alternateSearchPathDefault')
+        let g:alternateSearchPathDefault=g:alternateSearchPath
+    endif
+    let g:alternateSearchPath = g:alternateSearchPathDefault
+
+    let current_path = expand('%:p:h')
+
+    " Find any 'src' dir above current directory
+    let src_path = finddir('src', current_path . ';', 1)
+    if src_path != ''
+        let g:alternateSearchPath = g:alternateSearchPath . ',abs:' . src_path
+    endif
+
+    " look for .alternate_dir.txt containing list of paths to search
+    let fname=current_path . '/.alternate_paths.txt'
+    for path in GatherPathsFromFile(fname)
+        let g:alternateSearchPath = g:alternateSearchPath . ',abs:' . path
+    endfor
+endfunction
+
 " setup a list of header search paths for c/c++ coding
 function! SetupIncludeDirs()
     let g:cpp_incl = copy(g:base_cpp_incl)
     if exists("g:src_path")
+        " Add project root
         :call add(g:cpp_incl, g:src_path)
-        " TODO: make this specific to src_path.  (e.g. read a file called
-        " include_paths.txt)
-        :call add(g:cpp_incl, g:src_path . '/thirdparty/gtest/include')
-        :call add(g:cpp_incl, g:src_path . '/thirdparty/OpenNI2/Include')
+
+        " check for file in project root that lists include paths
+        let fname = g:src_path . '/.include_paths.txt'
+        for path in GatherPathsFromFile(fname, g:src_path)
+            call add(g:cpp_incl, path)
+        endfor
     endif
     if exists("g:build_path")
         :call add(g:cpp_incl, g:build_path)
@@ -243,6 +279,14 @@ function! SetupPath()
     for dir in g:cpp_incl
         let &path=&path.','.dir
     endfor 
+
+    " check for file in cwd that lists paths to add
+    " Note: if you already listed a path in .include_paths.txt, you 
+    "       don't need to also include it in .paths.txt
+    " TODO: consider checking for this in the project root, rather than cwd
+    for path in GatherPathsFromFile('.paths.txt')
+        let &path=&path.','.path
+    endfor
 endfunction
 
 " setup neomake build parameters, which may change depending on the current

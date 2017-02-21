@@ -43,6 +43,7 @@ call SetBaseMakeprg()
 autocmd BufEnter * call SetMakeprgPath()
 autocmd BufEnter * call SetupIncludeDirs()
 autocmd BufEnter * call SetupPath()
+autocmd BufEnter * call SetupAlternativePath()
 autocmd BufEnter * call SetNeoMakeSearchPath()
 
 :set mouse=a
@@ -55,9 +56,19 @@ if !has("nvim")
     endif
 endif
 
+if has("unix")
+    if (system('uname') =~ "darwin")
+        let g:is_macos=1
+    else
+        let g:is_macos=0
+    endif
+else
+    let g:is_macos=0
+endif
+
 " path is actually set in SetupPath(), called at end of this script (and on
 " every buffer switch)
-let g:base_path=&path.''
+let g:base_path=".,/usr/include,,"
 
 let g:base_cpp_incl = ['/usr/include/','/usr/local/include',
     \ '/usr/include/eigen3',
@@ -71,11 +82,13 @@ if has('nvim')
 
     let g:base_neomake_cpp_args = ['-c', 
     \           '-std=c++11',
-    \           '-fopenmp',
-    \           '-include'.$HOME.'/.vim/neomake/eos.h',
     \           '-Wall',
     \           '-Wpedantic',
     \           '-Wextra']
+    if !g:is_macos
+        " clang on macos currently does not support openmp :-(
+        call add(g:base_neomake_cpp_args, '-openmp')
+    endif
 
     " g:neomake_cpp_gcc_maker is setup here:
     " g:neomake_cpp_clang_maker is setup here:
@@ -85,11 +98,7 @@ else
 endif
 
 :helptags ~/.vim/doc
-":set tags+=~/.vim/tags/gl
 :set tags+=~/.tags.d/cpp_std.tags
-:set tags+=~/.tags.d/eigen3.tags
-:set tags+=~/.tags.d/opencv.tags
-:set tags+=~/.tags.d/mp_eos.tags
 
 
 """""""""""""""""""""
@@ -149,8 +158,6 @@ let g:miniBufExplUseSingleClick = 1
 let g:miniBufExplMapWindowNavVim = 1
 let g:miniBufExplVSplit = 25
 let g:miniBufExplSplitBelow=1
-" c-support plugin
-let s:C_CodeSnippets   = '/home/ksimek/school/projects/boilerplate'
 
 " command-t plugin
 "let g:CommandTMaxDepth = 5
@@ -158,6 +165,7 @@ let g:ctrlp_max_depth = 5
 :set wildignore+=*.o,*.a,build,test,Include_lines,Makefile*,dev,prod,*.jpg,*tiff,*tmp,*.bak
 ":set g:ctrlp_custom_ignore+=*.o,*.a,build,test,Include_lines,Makefile*,dev,prod,*.jpg,*tiff,*tmp,*.bak
 
+let g:alternateNoDefaultAlternate=1
 
 """""""""""""""""""""""""""""
 " Recovery diff
@@ -298,7 +306,6 @@ set errorformat^=\%f:%l:%c:\ %trror:\ %m,
     \%f:%l:%c:\ %tarning:\ %m,
     \%f:%l:\ %tarning:\ %m,
 set errorformat^=%-GIn\ file\ included\ %.%# 
-
 
 """"""""""""""""""""
 " Auto completion, Intellisense
