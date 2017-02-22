@@ -1,14 +1,22 @@
 " vim: ts=4 sw=4 et
 
 function! neomake#makers#ft#ruby#EnabledMakers()
-    return ['mri', 'rubocop', 'reek']
+    return ['mri', 'rubocop', 'reek', 'rubylint']
 endfunction
 
 function! neomake#makers#ft#ruby#rubocop()
     return {
         \ 'args': ['--format', 'emacs'],
-        \ 'errorformat': '%f:%l:%c: %t: %m',
+        \ 'errorformat': '%f:%l:%c: %t: %m,%E%f:%l: %m',
         \ 'postprocess': function('neomake#makers#ft#ruby#RubocopEntryProcess')
+        \ }
+endfunction
+
+function! neomake#makers#ft#ruby#rubylint()
+    return {
+        \ 'exe': 'ruby-lint',
+        \ 'args': ['--presenter', 'syntastic'],
+        \ 'errorformat': '%f:%t:%l:%c: %m',
         \ }
 endfunction
 

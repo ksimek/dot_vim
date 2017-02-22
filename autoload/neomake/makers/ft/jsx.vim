@@ -21,3 +21,11 @@ endfunction
 function! neomake#makers#ft#jsx#eslint()
     return neomake#makers#ft#javascript#eslint()
 endfunction
+
+function! neomake#makers#ft#jsx#eslint_d()
+    return neomake#makers#ft#javascript#eslint_d()
+endfunction
+
+function! neomake#makers#ft#jsx#rjsx()
+    return neomake#makers#ft#javascript#rjsx()
+endfunction

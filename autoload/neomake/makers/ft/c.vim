@@ -1,16 +1,8 @@
 " vim: ts=4 sw=4 et
 
 function! neomake#makers#ft#c#EnabledMakers()
-    let makers = []
-    if neomake#utils#Exists('clang')
-        call add(makers, 'clang')
-
-        if neomake#utils#Exists('clang-tidy')
-            call add(makers, 'clangtidy')
-        endif
-    else
-        call add(makers, 'gcc')
-    end
+    let makers = executable('clang') ? ['clang', 'clangtidy', 'clangcheck'] : ['gcc']
+    call add(makers, 'checkpatch')
     return makers
 endfunction
 
@@ -21,9 +13,28 @@ function! neomake#makers#ft#c#clang()
             \ '%-G%f:%s:,' .
             \ '%f:%l:%c: %trror: %m,' .
             \ '%f:%l:%c: %tarning: %m,' .
+            \ '%I%f:%l:%c: note: %m,' .
             \ '%f:%l:%c: %m,'.
             \ '%f:%l: %trror: %m,'.
             \ '%f:%l: %tarning: %m,'.
+            \ '%I%f:%l: note: %m,'.
+            \ '%f:%l: %m'
+        \ }
+endfunction
+
+function! neomake#makers#ft#c#clangcheck()
+    return {
+        \ 'exe': 'clang-check',
+        \ 'args': ['%:p'],
+        \ 'errorformat':
+            \ '%-G%f:%s:,' .
+            \ '%f:%l:%c: %trror: %m,' .
+            \ '%f:%l:%c: %tarning: %m,' .
+            \ '%I%f:%l:%c: note: %m,' .
+            \ '%f:%l:%c: %m,'.
+            \ '%f:%l: %trror: %m,'.
+            \ '%f:%l: %tarning: %m,'.
+            \ '%I%f:%l: note: %m,'.
             \ '%f:%l: %m',
         \ }
 endfunction
@@ -39,9 +50,11 @@ function! neomake#makers#ft#c#gcc()
             \ '%-G %#from %f:%l\,,' .
             \ '%f:%l:%c: %trror: %m,' .
             \ '%f:%l:%c: %tarning: %m,' .
+            \ '%I%f:%l:%c: note: %m,' .
             \ '%f:%l:%c: %m,' .
             \ '%f:%l: %trror: %m,' .
             \ '%f:%l: %tarning: %m,'.
+            \ '%I%f:%l: note: %m,'.
             \ '%f:%l: %m',
         \ }
 endfunction
@@ -58,5 +71,15 @@ function! neomake#makers#ft#c#clangtidy()
             \ '%W%f:%l:%c: warning: %m,' .
             \ '%-G%\m%\%%(LLVM ERROR:%\|No compilation database found%\)%\@!%.%#,' .
             \ '%E%m',
+        \ }
+endfunction
+
+function! neomake#makers#ft#c#checkpatch()
+    return {
+        \ 'exe': 'checkpatch.pl',
+        \ 'args': ['--no-summary', '--no-tree', '--terse', '--file'],
+        \ 'errorformat':
+            \ '%f:%l: %tARNING: %m,' .
+            \ '%f:%l: %tRROR: %m',
         \ }
 endfunction
