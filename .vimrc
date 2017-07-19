@@ -28,6 +28,10 @@ source ~/.vim/functions.vim
 syntax enable
 " my preferred tab-completion (Bash-like)
 :cnoremap <Tab>  <C-L><C-D>
+" using ctrl-c to exit escape mode causes problems in neovim 1.7.  I never use
+" ctrl-c but sometimes I hit it accidentally and weird things happen.
+" Neovim's maintainer recommends this remapping:
+:inoremap <C-c>  <Esc>
 source $HOME/.vim/autocorrect_custom.vim
 
 autocmd! Bufenter *
@@ -81,7 +85,8 @@ if has('nvim')
     autocmd! BufWritePost * Neomake " compile file on write
 
     let g:base_neomake_cpp_args = ['-c', 
-    \           '-std=c++11',
+    \           '-std=c++14',
+    \           '-o/dev/null',
     \           '-Wall',
     \           '-Wpedantic',
     \           '-Wextra']
@@ -97,8 +102,11 @@ else
     command! Make make
 endif
 
+" TODO: Check if directory exists, and if so, add all files inside
 :helptags ~/.vim/doc
-:set tags+=~/.tags.d/cpp_std.tags
+:set tags =$HOME/.tags.d/cpp_std.tags
+:set tags+=$HOME/.tags.d/project.tags
+:set tags+=$HOME/.tags.d/CoreAppleCVA.tags
 
 
 """""""""""""""""""""
@@ -167,6 +175,11 @@ let g:ctrlp_max_depth = 5
 
 let g:alternateNoDefaultAlternate=1
 
+augroup my_neomake
+    au!
+    autocmd User NeomakeJobFinished call OnNeomakeJobFinished()
+augroup END
+
 """""""""""""""""""""""""""""
 " Recovery diff
 """""""""""""""""""""""""""""
@@ -214,13 +227,13 @@ nmap <leader>tt :TlistToggle<cr>
 nmap <leader>wt :WMToggle<cr>
 " space toggles the fold state under the cursor.
 nnoremap <silent><space> :exe 'silent! normal! za'.(foldlevel('.')?'':'l')<cr>
+" set window width to 100 columns
+nmap <leader>v :vertical resize 100<cr>
 """""""""""""""""""""""""""""
 " RARELY USED MAPINGS (consider removing)
 """"""""""""""""""""""""""""""
 "   remove newlines from selected lines
 vmap <backspace> :s/\n//g<cr>
-" Fix ^M at eol 
-:nmap <leader>rn :%s/\r/\r/g<cr>
 "Some nice mapping to switch syntax (useful if one mixes different languages in one file)
 map <leader>1 :set syntax=php<cr>
 map <leader>2 :set syntax=xhtml<cr>

@@ -9,6 +9,3 @@ ia Caemra Camera
 ia vectro vector
 ia 'std::Vector' 'std::vector'
 ia Guassian Gaussian
-
-
-

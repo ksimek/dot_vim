@@ -185,16 +185,16 @@ function! SetMakeprgPath()
     let builddir = findfile('build/Makefile', current_path . ';')
     if !empty(builddir) 
         let g:build_path = fnamemodify(builddir, ':h')
-        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
-        let g:src_path = fnamemodify(g:build_path, ':h')
+        let &makeprg = g:base_makeprg . ' -C ' . g:build_path
+        let g:src_path = fnamemodify(g:build_path, ':p:h:h')
         return
     endif
 
     let builddir = findfile('build/makefile', current_path . ';')
     if !empty(builddir) 
         let g:build_path = fnamemodify(builddir, ':h')
-        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
-        let g:src_path = fnamemodify(g:build_path, ':h')
+        let &makeprg = g:base_makeprg . ' -C ' . g:build_path
+        let g:src_path = fnamemodify(g:build_path, ':p:h:h')
         return
     endif
 
@@ -202,7 +202,7 @@ function! SetMakeprgPath()
     let builddir = findfile('Makefile', current_path . ';')
     if !empty(builddir)
         let g:build_path = fnamemodify(builddir, ':h')
-        let &makeprg = g:base_makeprg . ' -C ' . fnamemodify(builddir, ':h')
+        let &makeprg = g:base_makeprg . ' -C ' . g:build_path
         let g:src_path = g:build_path
         return
     endif
@@ -211,11 +211,13 @@ function! SetMakeprgPath()
     let builddir = findfile('makefile', current_path . ';')
     if !empty(builddir)
         let g:build_path = fnamemodify(builddir, ':h')
-        let &makeprg = g:base_makeprg . ' -C ' . build_path
+        let &makeprg = g:base_makeprg . ' -C ' . g:build_path
         let g:src_path = g:build_path
         return
     endif
 
+    " Out of source builds.  look for <path>-build in the same directory as
+    " <path>
     while !empty(current_path) && current_path != '/'
         let current_dir = fnamemodify(current_path, ':t')
         let parent = fnamemodify(current_path, ':h')
@@ -304,5 +306,13 @@ function! SetNeoMakeSearchPath()
         \ }
     let g:neomake_cpp_clang_maker = copy(g:neomake_cpp_gcc_maker)
 
+    let g:neomake_objcpp_enable_makers = ['clang']
+    let g:neomake_objcpp_clang_maker = copy(g:neomake_cpp_gcc_maker)
+
     endif
+endfunction
+
+function! OnNeomakeJobFinished()
+    let jobinfo = g:neomake_hook_context.jobinfo
+    echo jobinfo.maker.name  . " exited with code " . jobinfo.exit_code
 endfunction
